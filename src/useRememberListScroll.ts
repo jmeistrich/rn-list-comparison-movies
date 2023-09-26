@@ -1,10 +1,10 @@
+import {FlashList} from '@shopify/flash-list';
 import {useEffect, useRef} from 'react';
-import {FlatList} from 'react-native';
 
 const scrollOffsets: {[key: string]: number} = {};
 
 export const useRememberListScroll = <T>(
-  listRef: React.RefObject<FlatList<T>>,
+  listRef: React.RefObject<FlashList<T>>,
   rowId: string,
 ) => {
   const currentScrollOffset = useRef<number>(0);

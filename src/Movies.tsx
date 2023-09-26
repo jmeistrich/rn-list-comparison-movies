@@ -1,5 +1,6 @@
-import React, {memo, useRef} from 'react';
-import {FlatList, Image, StyleSheet, Text, View} from 'react-native';
+import React, {useRef} from 'react';
+import {Image, StyleSheet, Text, View} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
 import {IMAGE_SIZE, Movie, Playlist, getImageUrl} from './api';
 import {playlists as playlistData} from './api/data/playlist';
 import {useRememberListScroll} from './useRememberListScroll';
@@ -12,16 +13,16 @@ const cardStyles = StyleSheet.create({
   },
 });
 
-const MoviePortrait = memo(({movie}: {movie: Movie}) => {
+const MoviePortrait = ({movie}: {movie: Movie}) => {
   return (
     <Image
       source={{uri: getImageUrl(movie.poster_path)}}
       style={cardStyles.image}
     />
   );
-});
+};
 
-const MarginBetweenItems = memo(() => <View style={{width: margins.s}} />);
+const MarginBetweenItems = () => <View style={{width: margins.s}} />;
 
 const margins = {
   s: 5,
@@ -46,9 +47,9 @@ const rowStyles = StyleSheet.create({
   },
 });
 
-const MovieRow = memo(({playlist}: {playlist: Playlist}) => {
+const MovieRow = ({playlist}: {playlist: Playlist}) => {
   const movies = playlistData[playlist.id]();
-  const listRef = useRef<FlatList<Movie>>(null);
+  const listRef = useRef<FlashList<Movie>>(null);
 
   const {onMomentumScrollBegin, onScroll} = useRememberListScroll(
     listRef,
@@ -61,11 +62,13 @@ const MovieRow = memo(({playlist}: {playlist: Playlist}) => {
         {playlist.title}
       </Text>
       <View style={rowStyles.container}>
-        <FlatList
+        <FlashList
           contentContainerStyle={rowStyles.listContainer}
-          keyExtractor={(movie: Movie) => movie.id.toString()}
+          // See https://shopify.github.io/flash-list/docs/fundamentals/performant-components/#remove-key-prop
+          keyExtractor={(movie: Movie, index: number) => index.toString()}
           ItemSeparatorComponent={MarginBetweenItems}
           horizontal
+          estimatedItemSize={cardStyles.image.width}
           data={movies}
           renderItem={({item}: {item: Movie}) => <MoviePortrait movie={item} />}
           ref={listRef}
@@ -75,7 +78,7 @@ const MovieRow = memo(({playlist}: {playlist: Playlist}) => {
       </View>
     </>
   );
-});
+};
 
 const listStyles = StyleSheet.create({
   container: {
@@ -88,9 +91,10 @@ const App = () => {
   const playlists = require('./api/data/rows.json');
 
   return (
-    <FlatList
+    <FlashList
       data={playlists}
       keyExtractor={(playlist: Playlist) => playlist.id}
+      estimatedItemSize={cardStyles.image.height + 25}
       renderItem={({item: playlist}: {item: Playlist}) => (
         <MovieRow playlist={playlist} />
       )}
